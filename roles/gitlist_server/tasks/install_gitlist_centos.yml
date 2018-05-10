@@ -1,0 +1,100 @@
+- name: isntall_epel
+  yum:
+    name: epel-release
+    state: latest
+
+- name: install http
+  yum: name={{item}}  state=installed
+  with_items:
+    - git-core
+    - httpd
+    - php-fpm
+    - php
+    - policycoreutils-python
+
+- name: create /var/www/
+  file:
+    path: /var/www/
+    state: directory
+
+- name: Extract gitlist-0.5.0.tar.gz
+  unarchive:
+    src: gitlist-0.5.0.tar.gz
+    dest: /var/www/
+
+- name: edit /etc/php.ini
+  lineinfile:
+    path:  /etc/php.ini
+    regexp: "memory_limit = "
+    line: "memory_limit = 1024M"
+
+- name: replace files
+  copy:
+    src: /var/www/gitlist/config.ini-example
+    dest: /var/www/gitlist/config.ini
+    remote_src: yes
+
+- name: edit  /var/www/gitlist/config.ini
+  lineinfile:
+    path:  /var/www/gitlist/config.ini
+    regexp: '/home/git/repositories/'
+    state: absent
+
+- name: add gitlist in httpd
+  blockinfile:
+    path: /etc/httpd/conf.d/gitlist.conf
+    create: yes
+    block: |
+      Alias /gitlist /var/www/gitlist
+      <Directory /var/www/gitlist/>
+              Options FollowSymLinks
+              AllowOverride All
+      </directory>
+
+- name: firewall setup
+  shell: firewall-cmd --permanent --add-port=80/tcp; firewall-cmd --permanent --add-port=443/tcp
+  ignore_errors: True
+
+- name: firewall restart
+  service:
+    name: firewalld
+    state: restarted
+
+- name: selinux
+  copy:
+    src: gitlist_selinux_rule_1.pp
+    dest: /root/
+
+- name: semodule -i
+  shell: semodule -i /root/gitlist_selinux_rule_1.pp
+
+- name: selinux
+  copy:
+    src: gitlist_selinux_rule_2.pp
+    dest: /root/
+
+- name: semodule -i
+  shell: semodule -i /root/gitlist_selinux_rule_2.pp
+
+- name: restart httpd
+  service:
+    name: httpd
+    state: restarted
+
+- name: cache folder create
+  file:
+    path: /var/www/gitlist/cache
+    state: directory
+    mode: 0777
+    recurse: yes
+
+- name: edit .hta
+  lineinfile:
+    path: /var/www/gitlist/.htaccess
+    regexp: "^RewriteBase "
+    line: "RewriteBase /gitlist/"
+
+- name: autostart httpd
+  service:
+    name: httpd
+    enabled: yes

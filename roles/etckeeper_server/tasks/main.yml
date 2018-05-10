@@ -1,0 +1,19 @@
+  - include_tasks: install_etckeeper_centos.yml
+    when: 
+      - ansible_distribution == 'CentOS' or ansible_distribution == 'Red Hat Enterprise Linux'
+      - uninstall_etckeeper == false
+
+  - include_tasks: install_etckeeper_debian.yml
+    when: 
+      - ansible_distribution == 'Debian' or ansible_distribution == 'Ubuntu'
+      - uninstall_etckeeper == false
+
+  - include_tasks: install_etckeeper_common.yml
+    when: 
+      - uninstall_etckeeper == false
+
+  - include_tasks: uninstall_etckeeper.yml
+    when: uninstall_etckeeper == true
+
+
+

@@ -1,0 +1,72 @@
+- name: install apache
+  apt: name={{item}}  state=installed
+  with_items:
+    - git-core
+    - apache2
+    - php-fpm
+    - php
+    - php7.0-xml
+
+- name: create /var/www/
+  file:
+    path: /var/www/
+    state: directory
+
+- name: Extract gitlist-0.5.0.tar.gz
+  unarchive:
+    src: gitlist-0.5.0.tar.gz
+    dest: /var/www/
+
+- name: edit /etc/php.ini
+  lineinfile:
+    path:  /etc/php/7.0/apache2/php.ini
+    regexp: "memory_limit = "
+    line: "memory_limit = 1024M"
+
+- name: replace files
+  copy:
+    src: /var/www/gitlist/config.ini-example
+    dest: /var/www/gitlist/config.ini
+    remote_src: yes
+
+- name: edit  /var/www/gitlist/config.ini
+  lineinfile:
+    path:  /var/www/gitlist/config.ini
+    regexp: '/home/git/repositories/'
+    state: absent
+
+- name: add apache2.conf
+  blockinfile:
+    path: /etc/apache2/conf-available/gitlist.conf
+    create: yes
+    block: |
+      Alias /gitlist /var/www/gitlist
+      <Directory /var/www/gitlist/>
+              Options FollowSymLinks
+              AllowOverride All
+      </directory>
+
+- name: a2enconf gitlist
+  shell: a2enconf gitlist
+
+- name: a2enmod rewrite
+  shell: a2enmod rewrite
+
+- name: restart apache
+  service:
+    name: apache2
+    state: restarted
+
+- name: cache folder create
+  file:
+    path: /var/www/gitlist/cache
+    state: directory
+    mode: 0777
+    recurse: yes
+
+- name: edit .hta
+  lineinfile:
+    path: /var/www/gitlist/.htaccess
+    regexp: "^RewriteBase "
+    line: "RewriteBase /gitlist/"
+

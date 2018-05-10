@@ -1,0 +1,19 @@
+- name: remove gitlist-0.5.0.tar.gz
+  file:
+    path: /var/www/gitlist-0.5.0.tar.gz
+    state: absent
+
+- name: remove gitlist-0.5.0.tar.gz
+  file:
+    path: /var/www/gitlist
+    state: absent
+
+- name: add apache2.conf
+  file:
+    path: /etc/apache2/conf-available/gitlist.conf
+    state: absent
+
+- name: a2disconf gitlist
+  shell: a2disconf gitlist
+  ignore_errors: True
+

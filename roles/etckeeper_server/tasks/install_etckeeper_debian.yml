@@ -1,0 +1,52 @@
+- name: Create system accounts
+  user:
+    name: git-{{ hostvars[item]['ansible_hostname'] }}
+    home: /home/git-{{ hostvars[item]['ansible_hostname'] }}
+    state: present
+  with_items: "{{ groups['etckeeper-clients'] }}"
+
+- name: Creates directory
+  file: path=/home/git-{{ hostvars[item]['ansible_hostname'] }}/.ssh/ state=directory
+  with_items: "{{ groups['etckeeper-clients'] }}"
+
+- name: create repo
+  file:
+    path: /home/git-{{ hostvars[item]['ansible_hostname'] }}/repositories/{{ hostvars[item]['ansible_hostname'] }}.git
+    state: directory
+    owner: git-{{ hostvars[item]['ansible_hostname'] }}
+    group: www-data
+    recurse: yes
+  with_items: "{{ groups['etckeeper-clients'] }}"
+
+- name: git init
+  shell: git init --bare /home/git-{{ hostvars[item]['ansible_hostname'] }}/repositories/{{ hostvars[item]['ansible_hostname'] }}.git
+  with_items: "{{ groups['etckeeper-clients'] }}"
+
+- name: chown repo
+  file:
+    path: /home/git-{{ hostvars[item]['ansible_hostname'] }}/repositories/{{ hostvars[item]['ansible_hostname'] }}.git
+    owner: git-{{ hostvars[item]['ansible_hostname'] }}
+    group: www-data
+    state: directory
+    recurse: yes
+  with_items: "{{ groups['etckeeper-clients'] }}"
+
+- name: chown folder
+  file:
+    path: /home/git-{{ hostvars[item]['ansible_hostname'] }}/
+    owner: git-{{ hostvars[item]['ansible_hostname'] }}
+    group: www-data
+    mode: 0750
+  with_items: "{{ groups['etckeeper-clients'] }}"
+
+
+#############ssh#############
+
+- name: chmod ssh folder
+  file:
+    path: /home/git-{{ hostvars[item]['ansible_hostname'] }}/.ssh/
+    owner: git-{{ hostvars[item]['ansible_hostname'] }}
+    group: www-data
+    state: directory
+    recurse: yes
+  with_items: "{{ groups['etckeeper-clients'] }}"

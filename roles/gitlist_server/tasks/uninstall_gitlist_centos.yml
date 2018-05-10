@@ -1,0 +1,27 @@
+- name: remove gitlist-0.5.0.tar.gz
+  file:
+    path: /var/www/gitlist-0.5.0.tar.gz
+    state: absent
+
+- name: remove gitlist-0.5.0.tar.gz
+  file:
+    path: /var/www/gitlist
+    state: absent
+
+- name: remove gitlist in httpd
+  file:
+    path: /etc/httpd/conf.d/gitlist.conf
+    state: absent
+    
+- name: uninstall selinux rule 1
+  shell: semodule -r gitlist_selinux_rule_1
+
+- name: uninstall selinux rule 2
+  shell: semodule -r gitlist_selinux_rule_2
+  
+- name: close firewalld ports
+  shell: |
+    firewall-cmd --remove-port=443/tcp
+    firewall-cmd --remove-port=80/tcp
+    firewall-cmd --runtime-to-permanent
+    firewall-cmd --reload

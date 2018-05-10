@@ -1,0 +1,19 @@
+  - name: install sshpass
+    package:
+      name: sshpass
+      state: latest
+
+  - name: Generate SSH keys
+    shell: ssh-keygen -b 2048 -t rsa -f /root/.ssh/id_rsa -q -N ""
+    args:
+      creates: /root/.ssh/id_rsa
+
+  - name: crate knownhosts
+    shell: ssh-keyscan {{ hostvars[item]['ansible_default_ipv4']['address'] }} >> ~/.ssh/known_hosts
+    with_items: "{{ groups['etckeeper-servers'] }}"
+
+
+
+  - name: copy id_rsa.pub
+    shell: sshpass -p {{ ansible_ssh_pass }} scp /root/.ssh/id_rsa.pub {{ ansible_ssh_user }}@{{ hostvars[item]['ansible_default_ipv4']['address'] }}:/home/{{ ansible_ssh_user }}/{{ ansible_hostname }}-ak
+    with_items: "{{ groups['etckeeper-servers'] }}"

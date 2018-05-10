@@ -1,0 +1,7 @@
+- name: install_apps
+  package:
+    name: "{{ item }}"
+    state: latest
+  with_items:
+    - etckeeper
+    - git

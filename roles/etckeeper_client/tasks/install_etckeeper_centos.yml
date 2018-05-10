@@ -1,0 +1,13 @@
+- name: isntall_epel
+  yum:
+    name: epel-release
+    state: latest
+- name: isntall_apps
+
+  yum:
+    name: "{{ item }}"
+    state: latest
+  with_items: 
+    - git
+    - etckeeper
+    - libselinux-python

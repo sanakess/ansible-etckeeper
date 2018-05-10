@@ -1,0 +1,19 @@
+- include_tasks: install_gitlist_centos.yml
+  when: 
+    - ansible_distribution == 'CentOS' or ansible_distribution == 'Red Hat Enterprise Linux'
+    - uninstall_gitlist == false
+
+- include_tasks: install_gitlist_debian.yml
+  when: 
+    - ansible_distribution == 'Debian' or ansible_distribution == 'Ubuntu'
+    - uninstall_gitlist == false
+
+- include_tasks: uninstall_gitlist_centos.yml
+  when: 
+    - ansible_distribution == 'CentOS' or ansible_distribution == 'Red Hat Enterprise Linux'
+    - uninstall_gitlist == true
+
+- include_tasks: uninstall_gitlist_debian.yml
+  when: 
+    - ansible_distribution == 'Debian' or ansible_distribution == 'Ubuntu'
+    - uninstall_gitlist == true

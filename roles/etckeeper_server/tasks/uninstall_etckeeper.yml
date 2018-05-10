@@ -1,0 +1,12 @@
+- name: remove user+dir
+  user:
+    name: git-{{ hostvars[item]['ansible_hostname'] }}
+    state: absent
+  with_items: "{{ groups['etckeeper-clients'] }}"
+- name: remove repo in gitlist config
+  lineinfile:
+    dest: /var/www/gitlist/config.ini
+    regexp: "git-{{ hostvars[item]['ansible_hostname'] }}"
+    state: absent
+  with_items: "{{ groups['etckeeper-clients'] }}"
+

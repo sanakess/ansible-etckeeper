@@ -1,0 +1,4 @@
+ansible_connection: ssh
+
+uninstall_etckeeper: false
+uninstall_gitlist: false		

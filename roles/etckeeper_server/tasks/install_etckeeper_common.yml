@@ -1,0 +1,56 @@
+- name: touch ak
+  file: path=/home/git-{{ hostvars[item]['ansible_hostname'] }}/.ssh/authorized_keys state=touch
+  with_items: "{{ groups['etckeeper-clients'] }}"
+
+- name: copy ak
+  copy:
+    src: /home/{{ ansible_ssh_user }}/{{ hostvars[item]['ansible_hostname'] }}-ak
+    dest: /home/git-{{ hostvars[item]['ansible_hostname'] }}/.ssh/authorized_keys
+    owner: git-{{ hostvars[item]['ansible_hostname'] }}
+    remote_src: yes
+    mode: 644
+  with_items: "{{ groups['etckeeper-clients'] }}"
+
+- name: delete tmp ak files
+  file:
+    path: /home/{{ ansible_ssh_user }}/{{ hostvars[item]['ansible_hostname'] }}-ak
+    state: absent
+  with_items: "{{ groups['etckeeper-clients'] }}"
+
+- file:
+    path: /home/git-{{ hostvars[item]['ansible_hostname'] }}/.ssh/
+    mode: 0700
+  with_items: "{{ groups['etckeeper-clients'] }}"
+
+###################ssh###############
+
+- lineinfile: 
+    path: /home/git-{{ hostvars[item]['ansible_hostname'] }}/repositories/{{ hostvars[item]['ansible_hostname'] }}.git/description
+    state: absent
+    line: "{{ hostvars[item]['ansible_hostname'] }}"
+  with_items: "{{ groups['etckeeper-clients'] }}"
+
+- lineinfile:
+    path: /var/www/gitlist/config.ini
+    insertafter: 'HEAD is detached'
+    line: repositories[] = '/home/git-{{ hostvars[item]['ansible_hostname'] }}/repositories/'
+  with_items: "{{ groups['etckeeper-clients'] }}"
+
+- name: chage
+  shell: chage -I -1 -m 0 -M 99999 -E -1 git-{{ hostvars[item]['ansible_hostname'] }}
+  with_items: "{{ groups['etckeeper-clients'] }}"
+
+
+- name: chmod ssh
+  shell: "chmod 750 /home/git-{{ hostvars[item]['ansible_hostname'] }}/.ssh/"
+  with_items: "{{ groups['etckeeper-clients'] }}"
+
+
+- name: chmod ssh
+  shell: "chmod 700 /home/git-{{ hostvars[item]['ansible_hostname'] }}/.ssh/"
+  with_items: "{{ groups['etckeeper-clients'] }}"
+
+
+- name: chmod ak
+  shell: "chmod 640 /home/git-{{ hostvars[item]['ansible_hostname'] }}/.ssh/authorized_keys"
+  with_items: "{{ groups['etckeeper-clients'] }}"

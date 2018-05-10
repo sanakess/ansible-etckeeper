@@ -1,0 +1,84 @@
+- name: etckeeper init
+  shell: cd /etc; etckeeper init
+
+- name: add ssh to .gitignore
+  lineinfile:
+    path: /etc/.gitignore
+    insertafter: 'DEADJOE'
+    line: ssh/*key
+
+- name: mode 0500 .gitignore
+  file:
+    path: /etc/.gitignore
+    mode: 0500
+
+- name: configuration .gitignore
+  shell: |
+    cd /etc; git rm -fr --cached .
+    cd /etc; git add .
+    git config --global user.email "you@example.com"
+    git config --global user.name "{{ ansible_hostname }}"
+
+- name: add PUSH_REMOTE="origin in /etckeeper.conf
+  lineinfile:
+    dest: /etc/etckeeper/etckeeper.conf
+    regexp: '^PUSH_REMOTE='
+    line: 'PUSH_REMOTE="origin"'
+
+- name: git remote add origin
+  shell: "cd /etc/; git remote add origin git-{{ ansible_hostname }}@{{ hostvars[item]['ansible_default_ipv4']['address'] }}:~/repositories/{{ ansible_hostname }}.git"
+  ignore_errors: True
+  with_items: "{{ groups['etckeeper-servers'] }}"
+  
+- name: git remote set-url origin
+  shell: "cd /etc/; git remote set-url origin git-{{ ansible_hostname }}@{{ hostvars[item]['ansible_default_ipv4']['address'] }}:~/repositories/{{ ansible_hostname }}.git"
+  with_items: "{{ groups['etckeeper-servers'] }}"
+- name: create /etc/1 to commit
+  file:
+    path: /etc/1
+    state: touch
+
+- name: git add all
+  shell: cd /etc/; git add -A
+
+- name: add 1st commit
+  shell: "cd /etc ; git commit -m '1st commit'"
+  ignore_errors: True
+
+- name: push to master
+  shell: cd /etc/; git push origin master
+
+- name: make ekp 
+  file:
+    path: /usr/local/bin/ekp
+    state: touch
+    mode: 755
+
+- name: ekp copy
+  blockinfile:
+    path: /usr/local/bin/ekp
+    block: |
+      #!/bin/bash
+      NOWDATE=$(date +%Y-%m-%d"_"%H_%M_%S)
+      cd /etc
+      git add -A
+      if [ -z "$1" ]; then
+              git commit -m "Change on $NOWDATE"
+       else
+              git commit -m "$1"
+       fi
+      git push origin master
+      #cd /opt
+      #git add -A
+      #if [ -z "$1" ]; then
+      #        git commit -m "Change on $NOWDATE"
+      # else
+      #       git commit -m "$1"
+      # fi
+      #git push origin opt
+
+- name: remove /etc/1
+  file:
+    path: /etc/1
+    state: absent
+
